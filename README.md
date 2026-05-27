@@ -277,6 +277,226 @@ curl -X POST http://localhost:5001/agent/chat \
 2. Ask: "Help me prepare a quote for Acme Corporation at 123 Industrial Ave, 36-month term"
 3. The agent should delegate to Network Serviceability, then to Deal Desk CPQ
 
+## 💬 User Interaction Guide
+
+This guide demonstrates how to interact with the TeleConnect Sales Agents system through a complete sales workflow. The example shows a realistic scenario: working on a deal for Global Logistics Corp with a tight 14-day deadline.
+
+### Complete Sales Workflow Example
+
+#### Step 1: Retrieve Customer Account Information
+
+**What to ask:**
+```
+I'm working on a new deal for Global Logistics Corp. Can you pull up their account details and check their current discount tier?
+```
+
+**What the agent does:**
+- Uses the Salesforce lookup tool to retrieve account information
+- Returns a formatted table with complete account details
+
+**Expected response:**
+| Field | Value |
+|-------|-------|
+| **Company Name** | Global Logistics Corp |
+| **Account ID** | ENT-8A000abc12 |
+| **Account Tier** | Strategic VIP |
+| **MSA Active** | ✓ Yes |
+| **MSA Discount** | 20% |
+| **Account Executive** | Sarah Jenkins |
+| **Contract Expires** | December 31, 2028 |
+
+**Summary provided:**
+- Active MSA with 20% discount
+- Strategic VIP account classification
+- Account executive and contract details
+
+---
+
+#### Step 2: Check Network Serviceability
+
+**What to ask:**
+```
+They are opening a new site at 123 Industrial Ave. Check the network serviceability for that address and tell me the delivery timelines for fiber versus 5G
+```
+
+**What the agent does:**
+- Delegates to the **Network Serviceability Agent**
+- Checks infrastructure availability at the specified address
+- Returns comparison of available connectivity options
+
+**Expected response:**
+
+**Network Serviceability for 123 Industrial Ave**
+
+| Connectivity Option | Availability | Delivery Timeline | Base MRC | Base NRC |
+|---------------------|--------------|-------------------|----------|----------|
+| **Fiber DIA** (Dedicated Internet Access) | ✅ Available | 30 days | $1,000/month | $500 (install) |
+| **5G FWA** (Fixed Wireless Access) | ✅ Available | 2 days | $350/month | $0 |
+
+**Key Takeaways:**
+- Site is Near-Net (fiber conduit 450 ft away)
+- Fiber requires 30-day build-out
+- 5G FWA can be provisioned in just 2 days
+- Both solutions are serviceable
+
+---
+
+#### Step 3: Handle Objections and Position Solutions
+
+**What to ask:**
+```
+Here is the problem: The client has a hard deadline and needs the site online in 14 days. The fiber timeline won't work. How should we position this?
+```
+
+**What the agent does:**
+- Analyzes the constraint (14-day deadline vs 30-day fiber build)
+- Provides strategic sales guidance from knowledge base
+- Offers positioning framework for 5G FWA as a solution
+
+**Expected response:**
+
+**How to Position 5G FWA for the 14-Day Deadline**
+
+| Reason | Talking Point | Value to Customer |
+|--------|---------------|-------------------|
+| **Speed to Market** | "We can have a fully-tested, production-ready connection up and running in 2 days – well under your 14-day deadline." | Guarantees the hard-deadline is met, avoiding project delays and penalties |
+| **Zero Installation Overhead** | "Because the 5G Fixed-Wireless Access solution requires no trenching or fiber-pull, there is no installation fee and no site-work schedule to coordinate." | Saves time and upfront cost (NRC $0) |
+| **Immediate Bandwidth** | "The baseline 5G FWA package delivers up to 350 Mbps symmetric bandwidth, which covers most warehouse, office, or IoT use-cases out of the box." | Meets typical data-intake needs for a new site |
+| **Scalable & Future-Proof** | "If you later decide you need higher capacity, the same 5G antenna can be upgraded to a higher-tier plan, or we can transition to fiber once the build-out is complete – the two solutions are fully interoperable." | Gives a clear upgrade path without a lock-in |
+| **Resilience & Redundancy** | "5G FWA can serve as a temporary backup for any future fiber connection, providing added network resiliency." | Improves business continuity |
+| **Cost Transparency** | "The base MRC is $350/month with no NRC, so you know exactly what you'll pay from day 1." | Predictable budgeting, no hidden fees |
+| **Enterprise-Grade SLA** | "Even though it's wireless, our 5G FWA service carries a 99.5% uptime SLA and 24/7 enterprise support, identical to our fiber offering." | Reassures quality will not be compromised |
+
+**Suggested Pitch Flow:**
+1. Acknowledge the deadline constraint
+2. Present 5G FWA as the only viable path to meet the 14-day requirement
+3. Walk through the benefits using the table above
+4. Address wireless concerns by emphasizing enterprise-grade SLA
+5. Offer a roadmap: "Start with 5G now, transition to fiber later when ready"
+
+---
+
+#### Step 4: Generate Pricing Quote
+
+**What to ask:**
+```
+I love that play. Run the pricing for the 5G FWA solution, making sure to apply their corporate discount
+```
+
+**What the agent does:**
+- Delegates to the **Deal Desk & CPQ Agent** (Google ADK via A2A)
+- Applies MSA discount (20%) from Salesforce data
+- Applies term-length kicker (additional 5% for 36-month term)
+- Calculates Total Contract Value and savings
+
+**Expected response:**
+
+**Enterprise Quote Calculation Complete**
+
+**Input Parameters**
+| Parameter | Value |
+|-----------|-------|
+| Base MRC | $350.00 |
+| Base NRC | $0.00 |
+| MSA Discount | 20.0% |
+| Term Length | 36 months |
+
+**Calculated Quote**
+| Metric | Amount |
+|--------|--------|
+| Monthly Recurring Charge | $262.50 |
+| Non-Recurring Charge | $0.00 |
+| Total Contract Value | $9,450.00 |
+| Annualized Savings | $1,050.00 |
+
+**Applied Promotions**
+- 36-Month Term Kicker: Extra 5% Off MRC
+- 36-Month Term Promotion: NRC Waived
+
+---
+
+#### Step 5: Secure Long-Term Revenue
+
+**What to ask:**
+```
+Let's secure the long-term revenue. I want to pitch the dedicated fiber as their permanent solution once the 30-day construction is done. If they sign a 36-month contract, what financial incentives are automatically triggered by the Deal Desk?
+```
+
+**What the agent does:**
+- Provides detailed explanation of CPQ business rules
+- Shows how incentives stack for 36-month contracts
+- Presents example with Fiber DIA pricing
+
+**Expected response:**
+
+**Financial Incentives for 36-Month Contracts**
+
+| Incentive | How It Is Applied | What It Means for the Customer |
+|-----------|-------------------|--------------------------------|
+| **MSA Discount** | Customer's active MSA (20% discount) is applied to the base MRC | Immediate reduction on list price |
+| **Term-Length Kicker** | An extra 5% off the MRC is added when the contract is 36 months or longer (stacked on top of MSA) | Guarantees a deeper price break for committing to a longer term |
+| **NRC Waiver** | For 36-month (or longer) terms, the installation (NRC) fee is fully waived | Customer pays $0 for site-build costs, eliminating upfront capital expense |
+| **Total Discount Display** | CPQ automatically shows the combined discount (e.g., 20% + 5% = 25% total) | Makes the value proposition transparent |
+| **TCV Calculation** | CPQ multiplies the discounted MRC by the contract length and adds any applicable NRC | Provides a single, audit-ready figure for quota-tracking |
+| **Annual Savings Indicator** | CPQ computes the annual dollar savings versus the list price | Helps highlight the ROI of the long-term commitment |
+
+**Example (Fiber DIA) – What the Numbers Look Like**
+
+| Item | Base Price | Discounts Applied | Final Price |
+|------|------------|-------------------|-------------|
+| **Monthly Recurring Charge (MRC)** | $1,000/mo | 20% MSA + 5% term kicker = 25% total | $750/mo |
+| **Installation (NRC)** | $500 | Waived (36-mo term) | $0 |
+| **Contract Length** | 36 months | – | – |
+| **Total Contract Value (TCV)** | – | – | $27,000 ($750 × 36) |
+| **Annual Savings** | – | – | $3,000 per year (vs. list price $12,000/yr) |
+
+**Bottom Line:** Position 5G FWA as the only viable path to meet the 14-day go-live requirement, while still delivering enterprise-grade performance, zero upfront installation cost, and a clear upgrade path to fiber when the timeline allows.
+
+---
+
+### Understanding Agent Collaboration
+
+The system uses **three specialized agents** working together:
+
+1. **TeleCorp Enterprise Sales Agent** (Main Orchestrator)
+   - Manages the conversation flow
+   - Routes requests to specialized agents
+   - Synthesizes information from multiple sources
+   - Presents unified responses to the user
+
+2. **Network Serviceability Agent** (watsonx Orchestrate)
+   - Checks address serviceability
+   - Provides infrastructure availability data
+   - Returns base costs and delivery timelines
+
+3. **Deal Desk & CPQ Agent** (Google ADK via A2A)
+   - Performs financial calculations
+   - Applies business rules and discounts
+   - Calculates Total Contract Value
+   - Generates audit-ready quotes
+
+### Viewing Agent Reasoning
+
+To see how the agents collaborated behind the scenes:
+
+1. Click **"Show Reasoning"** dropdown on any agent response
+2. View the step-by-step execution trace:
+   - Tool calls made (e.g., `get_salesforce_b2b_enterprise_account_lookup`)
+   - Agent delegations (e.g., `chat_with_collaborator_network_serviceability_agent`)
+   - Data passed between agents
+   - Raw API responses
+
+This provides full transparency and auditability for enterprise compliance.
+
+### Tips for Best Results
+
+- **Be specific with addresses**: Include street number and name for serviceability checks
+- **Mention customer names**: The agent will automatically look up account details
+- **Specify contract terms**: Default is 36 months, but you can request different terms
+- **Ask for comparisons**: Request "fiber vs 5G" to see side-by-side options
+- **Request explanations**: Ask "how should I position this?" for sales guidance
+- **Generate quotes**: Say "run pricing" or "calculate quote" to trigger CPQ calculations
+
 ## 🔧 Troubleshooting
 
 ### Common Issues and Solutions
