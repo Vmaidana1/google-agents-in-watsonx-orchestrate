@@ -1,0 +1,59 @@
+{
+    "_id": "69dd5e477a471e7b60d06396",
+    "email": "vinicius.maidana@ibm.com",
+    "userId": "003924631",
+    "toolId": "salesforce_b2b_enterprise_account_lookup",
+    "accountUser": {
+        "userId": "003924631",
+        "email": "vinicius.maidana@ibm.com"
+    },
+    "createdAt": "2026-04-13T21:21:11.639Z",
+    "items": [
+        {
+            "enterpriseaccountname": "Global Logistics Corp",
+            "b2baccountid": "ENT-8A000abc12",
+            "accounttier": "Strategic VIP",
+            "msaactive": true,
+            "msadiscountpercentage": 20,
+            "dedicatedaccountexec": "Sarah Jenkins",
+            "contractexpiration": "2028-12-31"
+        },
+        {
+            "enterpriseaccountname": "Acme Corporation",
+            "b2baccountid": "ENT-8A000xyz98",
+            "accounttier": "Mid-Market",
+            "msaactive": true,
+            "msadiscountpercentage": 5,
+            "dedicatedaccountexec": "Marcus Vance",
+            "contractexpiration": "2027-06-15"
+        },
+        {
+            "enterpriseaccountname": "Initech",
+            "b2baccountid": "ENT-8A000foo45",
+            "accounttier": "Standard",
+            "msaactive": false,
+            "msadiscountpercentage": 0,
+            "dedicatedaccountexec": "Unassigned",
+            "contractexpiration": null
+        },
+        {
+            "enterpriseaccountname": "Stark Industries",
+            "b2baccountid": "ENT-8A000bar88",
+            "accounttier": "Prospect",
+            "msaactive": false,
+            "msadiscountpercentage": 0,
+            "dedicatedaccountexec": "Sarah Jenkins",
+            "contractexpiration": null
+        },
+        {
+            "enterpriseaccountname": "Wayne Enterprises",
+            "b2baccountid": "ENT-8A000bat99",
+            "accounttier": "Legacy VIP",
+            "msaactive": true,
+            "msadiscountpercentage": 15,
+            "dedicatedaccountexec": "Marcus Vance",
+            "contractexpiration": "2026-11-01"
+        }
+    ],
+    "updatedAt": "2026-04-13T21:21:11.639Z"
+}

@@ -1,0 +1,79 @@
+{
+    "_id": "69dd20c57a471e7b60c8a153",
+    "email": "vinicius.maidana@ibm.com",
+    "userId": "003924631",
+    "toolId": "connectbase_network_serviceability_lookup",
+    "accountUser": {
+        "userId": "003924631",
+        "email": "vinicius.maidana@ibm.com"
+    },
+    "createdAt": "2026-04-13T16:58:45.980Z",
+    "items": [
+        {
+            "address": "123 Industrial Ave",
+            "networkstatus": "Near-Net",
+            "distancetofiberft": 450,
+            "fiberavailable": true,
+            "fiberdeliverydays": 30,
+            "fibermrc": 1000,
+            "fibernrc": 500,
+            "fwaavailable": true,
+            "fwadeliverydays": 2,
+            "fwamrc": 350,
+            "fwanrc": 0
+        },
+        {
+            "address": "456 Market St",
+            "networkstatus": "On-Net",
+            "distancetofiberft": 0,
+            "fiberavailable": true,
+            "fiberdeliverydays": 5,
+            "fibermrc": 800,
+            "fibernrc": 0,
+            "fwaavailable": true,
+            "fwadeliverydays": 2,
+            "fwamrc": 350,
+            "fwanrc": 0
+        },
+        {
+            "address": "789 Rural Road",
+            "networkstatus": "Off-Net",
+            "distancetofiberft": 15000,
+            "fiberavailable": false,
+            "fiberdeliverydays": 0,
+            "fibermrc": 0,
+            "fibernrc": 0,
+            "fwaavailable": false,
+            "fwadeliverydays": 0,
+            "fwamrc": 0,
+            "fwanrc": 0
+        },
+        {
+            "address": "101 Startup Blvd",
+            "networkstatus": "Off-Net",
+            "distancetofiberft": 8500,
+            "fiberavailable": false,
+            "fiberdeliverydays": 0,
+            "fibermrc": 0,
+            "fibernrc": 0,
+            "fwaavailable": true,
+            "fwadeliverydays": 2,
+            "fwamrc": 350,
+            "fwanrc": 0
+        },
+        {
+            "address": "222 Enterprise Way",
+            "networkstatus": "Near-Net",
+            "distancetofiberft": 2500,
+            "fiberavailable": true,
+            "fiberdeliverydays": 90,
+            "fibermrc": 1200,
+            "fibernrc": 15000,
+            "fwaavailable": true,
+            "fwadeliverydays": 3,
+            "fwamrc": 400,
+            "fwanrc": 0
+        }
+    ],
+    "updatedAt": "2026-04-13T16:58:45.980Z"
+}

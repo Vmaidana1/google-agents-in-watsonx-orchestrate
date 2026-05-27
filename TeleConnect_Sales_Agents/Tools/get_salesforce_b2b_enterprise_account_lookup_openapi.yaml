@@ -1,0 +1,197 @@
+openapi: 3.0.3
+info:
+  title: Salesforce B2B Enterprise Account Lookup API
+  description: API for retrieving Salesforce B2B Enterprise Account information
+  version: 1.0.0
+  contact:
+    email: vinicius.maidana@ibm.com
+
+servers:
+  - url: https://watsonx-chat.20pttk3h2ear.us-south.codeengine.appdomain.cloud/api/playground/custom-tools
+    description: Production server
+
+paths:
+  /salesforce_b2b_enterprise_account_lookup:
+    get:
+      summary: Get Salesforce B2B Enterprise Account Lookup
+      description: Retrieves all Salesforce B2B Enterprise Account information from the system.
+      operationId: get_salesforce_b2b_enterprise_account_lookup
+      tags:
+        - Salesforce Accounts
+      parameters:
+        - name: userId
+          in: query
+          description: Owner user ID (fixed value)
+          required: true
+          schema:
+            type: string
+            default: "003924631"
+        - name: email
+          in: query
+          description: Owner user email (fixed value)
+          required: true
+          schema:
+            type: string
+            default: "vinicius.maidana@ibm.com"
+      responses:
+        '200':
+          description: Successful response with account data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    description: Unique identifier for the record
+                    example: "69dd5e477a471e7b60d06396"
+                  email:
+                    type: string
+                    format: email
+                    description: User email
+                    example: "vinicius.maidana@ibm.com"
+                  userId:
+                    type: string
+                    description: User ID
+                    example: "003924631"
+                  toolId:
+                    type: string
+                    description: Tool identifier
+                    example: "salesforce_b2b_enterprise_account_lookup"
+                  accountUser:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: "003924631"
+                      email:
+                        type: string
+                        format: email
+                        example: "vinicius.maidana@ibm.com"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Record creation timestamp
+                    example: "2026-04-13T21:21:11.639Z"
+                  items:
+                    type: array
+                    description: List of enterprise accounts
+                    items:
+                      $ref: '#/components/schemas/EnterpriseAccount'
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Record last update timestamp
+                    example: "2026-04-13T21:21:11.639Z"
+              examples:
+                fullResponse:
+                  summary: Full response with all accounts
+                  value:
+                    _id: "69dd5e477a471e7b60d06396"
+                    email: "vinicius.maidana@ibm.com"
+                    userId: "003924631"
+                    toolId: "salesforce_b2b_enterprise_account_lookup"
+                    accountUser:
+                      userId: "003924631"
+                      email: "vinicius.maidana@ibm.com"
+                    createdAt: "2026-04-13T21:21:11.639Z"
+                    items:
+                      - enterpriseaccountname: "Global Logistics Corp"
+                        b2baccountid: "ENT-8A000abc12"
+                        accounttier: "Strategic VIP"
+                        msaactive: true
+                        msadiscountpercentage: 20
+                        dedicatedaccountexec: "Sarah Jenkins"
+                        contractexpiration: "2028-12-31"
+                      - enterpriseaccountname: "Acme Corporation"
+                        b2baccountid: "ENT-8A000xyz98"
+                        accounttier: "Mid-Market"
+                        msaactive: true
+                        msadiscountpercentage: 5
+                        dedicatedaccountexec: "Marcus Vance"
+                        contractexpiration: "2027-06-15"
+                    updatedAt: "2026-04-13T21:21:11.639Z"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    EnterpriseAccount:
+      type: object
+      description: Enterprise account information
+      properties:
+        enterpriseaccountname:
+          type: string
+          description: Name of the enterprise account
+          example: "Global Logistics Corp"
+        b2baccountid:
+          type: string
+          description: B2B account identifier
+          example: "ENT-8A000abc12"
+        accounttier:
+          type: string
+          description: Account tier classification
+          enum:
+            - Strategic VIP
+            - Legacy VIP
+            - Mid-Market
+            - Standard
+            - Prospect
+          example: "Strategic VIP"
+        msaactive:
+          type: boolean
+          description: Whether the Master Service Agreement is active
+          example: true
+        msadiscountpercentage:
+          type: number
+          format: float
+          description: MSA discount percentage
+          minimum: 0
+          maximum: 100
+          example: 20
+        dedicatedaccountexec:
+          type: string
+          description: Name of the dedicated account executive
+          example: "Sarah Jenkins"
+        contractexpiration:
+          type: string
+          format: date
+          nullable: true
+          description: Contract expiration date (YYYY-MM-DD format)
+          example: "2028-12-31"
+      required:
+        - enterpriseaccountname
+        - b2baccountid
+        - accounttier
+        - msaactive
+        - msadiscountpercentage
+        - dedicatedaccountexec
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "HTTP 404 error occurred"
+      required:
+        - error
+
+
+# Made with Bob

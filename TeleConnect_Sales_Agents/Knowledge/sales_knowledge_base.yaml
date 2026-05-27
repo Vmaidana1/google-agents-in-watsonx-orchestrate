@@ -1,0 +1,17 @@
+spec_version: v1
+kind: knowledge_base
+name: sales_knowledge_base
+description: |
+  Sales battlecards and product comparison materials for TeleCorp's enterprise connectivity solutions.
+  Includes detailed information about 5G Fixed Wireless Access (FWA) and Fiber Direct Internet Access (DIA)
+  offerings, competitive positioning, pricing guidance, and technical specifications to support B2B sales conversations.
+
+documents:
+  - path: 5G_FWA_Sales_Battlecard.pdf
+  - path: Fiber_DIA_Sales_Battlecard.pdf
+  - path: Fiber_vs_5G_FWA_Comparison_Slide.pdf
+
+vector_index:
+  embeddings_model_name: ibm/slate-125m-english-rtrvr-v2
+
+# Made with Bob
