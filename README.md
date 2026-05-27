@@ -56,8 +56,7 @@ TeleConnect_Agents/
 │       ├── agent.py               # Google ADK agent definition
 │       ├── tools/                 # CPQ calculation tool
 │       ├── requirements.txt
-│       ├── .env.example           # Environment template
-│       └── TROUBLESHOOTING.md     # A2A integration guide
+│       └── .env.example           # Environment template
 │
 └── TeleConnect_Sales_Agents/
     ├── Agents/                    # Agent YAML definitions
@@ -223,7 +222,6 @@ bash setupTeleConnect_Sales_Agents.sh
 
 ## 📖 Documentation
 
-- **[TROUBLESHOOTING.md](Google_Agents/deal_desk_agent/TROUBLESHOOTING.md)**: Comprehensive A2A integration guide
 - **Setup Script**: Automated deployment for sales agents
 
 ## 🔑 Key Learnings
@@ -296,7 +294,6 @@ This project is provided as-is for demonstration purposes.
 ## 📞 Support
 
 For questions or issues:
-- Review the [TROUBLESHOOTING.md](Google_Agents/deal_desk_agent/TROUBLESHOOTING.md) guide
 - Check watsonx Orchestrate documentation
 - Open an issue in this repository
 
