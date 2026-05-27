@@ -277,6 +277,84 @@ curl -X POST http://localhost:5001/agent/chat \
 2. Ask: "Help me prepare a quote for Acme Corporation at 123 Industrial Ave, 36-month term"
 3. The agent should delegate to Network Serviceability, then to Deal Desk CPQ
 
+## 🔧 Troubleshooting
+
+### Common Issues and Solutions
+
+#### Port Conflicts
+**Issue**: Server fails to start on port 5000
+**Cause**: macOS AirPlay Receiver uses port 5000 by default
+**Solution**: Use port 5001 or another available port in your `.env` file:
+```bash
+PORT=5001
+```
+
+#### Empty Message in watsonx Orchestrate
+**Issue**: UI shows "LLM has responded with empty message"
+**Cause**: Incorrect A2A response structure
+**Solution**: Ensure message fields are directly in `result`, not nested under `message`:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "role": "assistant",
+    "parts": [{"kind": "text", "text": "..."}],
+    "kind": "message"
+  },
+  "id": 1
+}
+```
+
+#### Networking Issues
+**Issue**: watsonx Orchestrate cannot reach local server
+**Cause**: watsonx Orchestrate runs on IBM Cloud SaaS, not locally
+**Solutions**:
+- ✅ **Development**: Use Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:5001`)
+- ✅ **Production**: Deploy to cloud platform (IBM Cloud Code Engine, AWS Lambda, Google Cloud Run, etc.)
+- ❌ **Don't use**: `localhost`, `127.0.0.1`, or local IP addresses
+
+#### Message Extraction Errors
+**Issue**: Server logs show empty extracted message
+**Cause**: Incorrect parsing of watsonx Orchestrate's message format
+**Solution**: Extract from `parts` array:
+```python
+if 'parts' in msg and isinstance(msg['parts'], list) and len(msg['parts']) > 0:
+    first_part = msg['parts'][0]
+    if isinstance(first_part, dict) and 'text' in first_part:
+        message_content = first_part['text']
+```
+
+#### HTTP 500 Errors
+**Issue**: Server returns 500 error during processing
+**Causes**:
+- Function parameter mismatches
+- Missing required fields in response
+- Unhandled exceptions in business logic
+
+**Solution**: Check server logs for detailed error messages and stack traces
+
+### Debugging Tips
+
+1. **Check Server Logs**: Always monitor the Flask server output for request/response details
+2. **Test with curl**: Isolate issues by testing the A2A endpoint directly:
+   ```bash
+   curl -X POST http://localhost:5001/agent/chat \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","method":"chat","params":{"message":{"parts":[{"kind":"text","text":"test"}]}},"id":1}'
+   ```
+3. **Verify Tunnel**: Ensure Cloudflare tunnel is running and URL is correctly configured in agent YAML
+4. **Check Response Structure**: Validate that your response matches A2A 0.3.0 format exactly
+5. **Monitor Network**: Use browser dev tools or Postman to inspect HTTP requests/responses
+
+### A2A Protocol Requirements
+
+**Critical Points**:
+- Incoming messages: `params.message.parts[0].text`
+- Outgoing messages: Fields directly in `result` (not nested)
+- Response must include: `role`, `parts`, and `kind` fields
+- Use `parts` array with `kind: "text"` for message content
+- Always return valid JSON-RPC 2.0 format with matching `id`
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
