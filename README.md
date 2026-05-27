@@ -4,7 +4,7 @@ A demonstration of cross-framework agent collaboration, integrating Google ADK a
 
 ## 🎯 Project Overview
 
-This repository showcases a production-ready multi-agent AI system for **TeleConnect**, a telecommunications company, demonstrating:
+This repository showcases a multi-agent AI system for **TeleConnect**, a telecommunications company, demonstrating:
 
 - **Cross-platform agent integration** (Google ADK ↔ IBM watsonx Orchestrate)
 - **Multi-agent orchestration** with specialized roles
@@ -31,7 +31,7 @@ This repository showcases a production-ready multi-agent AI system for **TeleCon
 
 **Workflow**: Address check → Get base costs → Lookup customer discount → Calculate final quote → Present proposal
 
-## 🚀 Key Features
+## ✨ Key Features
 
 ### Sales System
 - **Product Knowledge**: 5G FWA vs Fiber DIA comparison with battlecards
@@ -49,7 +49,7 @@ This repository showcases a production-ready multi-agent AI system for **TeleCon
 ## 📁 Project Structure
 
 ```
-TeleConnect_Agents/
+google-agents-in-watsonx-orchestrate/   ← repo root after cloning
 ├── Google_Agents/
 │   └── deal_desk_agent/          # Google ADK CPQ agent
 │       ├── A2A_server.py          # A2A protocol server
@@ -58,18 +58,21 @@ TeleConnect_Agents/
 │       ├── requirements.txt
 │       └── .env.example           # Environment template
 │
-└── TeleConnect_Sales_Agents/
-    ├── Agents/                    # Agent YAML definitions
-    │   ├── telecorp_enterprise_sales_agent.yaml
-    │   ├── network_serviceability_agent.yaml
-    │   └── deal_desk_cpq_agent_google_adk.yaml
-    ├── Tools/                     # Python tools
-    │   ├── get_salesforce_b2b_enterprise_account_lookup.py
-    │   ├── get_connectbase_network_serviceability_lookup.py
-    │   └── calculate_enterprise_quote.py
-    ├── Knowledge/                 # Sales battlecards & docs
-    ├── Data/                      # Mock data (Salesforce, ConnectBase)
-    └── setupTeleConnect_Sales_Agents.sh
+├── TeleConnect_Sales_Agents/
+│   ├── Agents/                    # Agent YAML definitions
+│   │   ├── telecorp_enterprise_sales_agent.yaml
+│   │   ├── network_serviceability_agent.yaml
+│   │   └── deal_desk_cpq_agent_google_adk.yaml
+│   ├── Tools/                     # Python tools
+│   │   ├── get_salesforce_b2b_enterprise_account_lookup.py
+│   │   ├── get_connectbase_network_serviceability_lookup.py
+│   │   └── calculate_enterprise_quote.py
+│   ├── Knowledge/                 # Sales battlecards & docs
+│   ├── Data/                      # Mock data (Salesforce, ConnectBase)
+│   └── setupTeleConnect_Sales_Agents.sh
+│
+├── .gitignore
+└── README.md
 ```
 
 ## 🛠️ Technology Stack
@@ -82,13 +85,13 @@ TeleConnect_Agents/
 - **Cloudflare Tunnel**: Local development networking
 
 ### Data Sources
-- **Salesforce**: B2B enterprise accounts, customer profiles
-- **ConnectBase**: Network infrastructure and serviceability
+- **Salesforce**: B2B enterprise accounts, customer profiles (mock data)
+- **ConnectBase**: Network infrastructure and serviceability (mock data)
 - **Knowledge Bases**: Sales battlecards (RAG)
 
 ## 📋 Prerequisites
 
-- **Python 3.8+**: For running the A2A server and tools
+- **Python 3.11+**: Required by the IBM watsonx Orchestrate ADK
 - **IBM watsonx Orchestrate account**: SaaS or on-premises instance
 - **Google API key**: For Google ADK (get from [Google AI Studio](https://aistudio.google.com/app/apikey))
 - **Git**: For cloning the repository
@@ -136,9 +139,7 @@ Since watsonx Orchestrate runs on IBM Cloud SaaS, your local server needs to be 
 
 **Note**: This guide uses Cloudflare Tunnel by default in all examples. If you choose a different option, adapt the URLs accordingly throughout the setup process.
 
-Choose one of these options:
-
-#### Option A: Cloudflare Tunnel (Recommended for Development)
+#### Option A: Cloudflare Tunnel ✅ Recommended for Development
 
 ```bash
 # In a new terminal
@@ -147,47 +148,28 @@ cloudflared tunnel --url http://localhost:5001
 
 Copy the generated URL (e.g., `https://xyz.trycloudflare.com`)
 
-**Pros**: Free, fast setup, no account required
-**Cons**: URL changes on each restart
+- **Pros**: Free, fast setup, no account required
+- **Cons**: URL changes on each restart
 
-#### Option B: ngrok
+#### Other Tunneling Options
 
-```bash
-# In a new terminal
-ngrok http 5001
-```
+| Option | Command | Pros | Cons |
+|--------|---------|------|------|
+| **ngrok** | `ngrok http 5001` | Stable URLs with paid plan | Free tier limited, requires account |
+| **localtunnel** | `npm i -g localtunnel && lt --port 5001` | Free, open source | Less stable |
 
-Copy the forwarding URL (e.g., `https://abc123.ngrok.io`)
+#### Option B: Deploy to Cloud ✅ Recommended for Production
 
-**Pros**: Stable URLs with paid plan, custom domains available
-**Cons**: Free tier has limitations, requires account
+Deploy your A2A server to a cloud platform for a stable, production-ready URL:
 
-#### Option C: localtunnel
+| Platform | Notes |
+|----------|-------|
+| IBM Cloud Code Engine | Best fit — serverless containers, native to the IBM ecosystem |
+| Google Cloud Run | Containerized deployment, pairs well with Google ADK |
+| AWS Lambda + API Gateway | Serverless function approach |
+| Azure Container Apps | Container hosting |
 
-```bash
-# Install localtunnel
-npm install -g localtunnel
-
-# In a new terminal
-lt --port 5001
-```
-
-Copy the generated URL (e.g., `https://xyz.loca.lt`)
-
-**Pros**: Free, open source
-**Cons**: Less stable than alternatives
-
-#### Option D: Deploy to Cloud (Recommended for Production)
-
-Deploy your A2A server to a cloud platform:
-- **IBM Cloud Code Engine**: Serverless container deployment
-- **AWS Lambda + API Gateway**: Serverless function
-- **Google Cloud Run**: Containerized deployment
-- **Azure Container Apps**: Container hosting
-- **Heroku**: Simple PaaS deployment
-
-**Pros**: Production-ready, stable URLs, scalable
-**Cons**: Requires cloud account and setup
+> **Tip**: See [`Google_Agents/deal_desk_agent/`](Google_Agents/deal_desk_agent/) for the server code you'll be deploying. A `Dockerfile` is a natural next step if you're targeting any of these platforms.
 
 ### 5. Configure External Agent URL
 
@@ -214,31 +196,45 @@ cd TeleConnect_Sales_Agents
 # Activate your watsonx Orchestrate environment
 orchestrate env activate YOUR_ENVIRONMENT_NAME --apikey YOUR_API_KEY
 
-# Run setup script (this will import all agents, tools, and knowledge bases)
+# Run setup script — imports all agents, tools, and knowledge bases
 bash setupTeleConnect_Sales_Agents.sh
 ```
+
+The script will:
+1. Import the three agent YAML definitions
+2. Register the Python tools with watsonx Orchestrate
+3. Upload the knowledge base documents (sales battlecards)
+4. Wire the Deal Desk CPQ agent to the tunnel URL you set in Step 5
 
 **Note**: The setup script will import the Deal Desk CPQ agent with the URL you configured in step 5.
 
 ## 📖 Documentation
 
-- **Setup Script**: Automated deployment for sales agents
+- **[Setup Script](TeleConnect_Sales_Agents/setupTeleConnect_Sales_Agents.sh)**: Automates the full deployment of agents, tools, and knowledge bases to watsonx Orchestrate. Run it from the `TeleConnect_Sales_Agents/` directory after activating your environment.
+- **[Agent YAML definitions](TeleConnect_Sales_Agents/Agents/)**: Declarative definitions for all three agents — edit these to customize agent behavior, descriptions, or collaborator URLs.
+- **[A2A Server](Google_Agents/deal_desk_agent/A2A_server.py)**: Flask server implementing the A2A 0.3.0 protocol. The entry point for the Google ADK integration.
+- **[CPQ Tools](TeleConnect_Sales_Agents/Tools/)**: Python implementations for Salesforce lookup, ConnectBase serviceability check, and quote calculation.
 
 ## 🔑 Key Learnings
 
 ### A2A 0.3.0 Protocol
-- **Incoming messages**: `params.message.parts[0].text`
-- **Outgoing messages**: Fields directly in `result`, not nested under `message`
-- **Structure**: Use `parts` array with `kind: "text"` and `kind: "message"`
+
+- **Incoming messages**: Extract text from `params.message.parts[0].text`
+- **Outgoing messages**: Fields go directly in `result` — **not** nested under a `message` key
+- **`parts` array**: Use `kind: "text"` for all entries inside `parts`
+- **Top-level `kind`**: The `kind: "message"` field belongs on the `result` object itself, not inside `parts`
 
 ### Response Format
+
 ```json
 {
   "jsonrpc": "2.0",
   "result": {
     "role": "assistant",
-    "parts": [{"kind": "text", "text": "..."}],
-    "kind": "message"
+    "kind": "message",
+    "parts": [
+      { "kind": "text", "text": "Your response here..." }
+    ]
   },
   "id": 1
 }
@@ -252,6 +248,8 @@ bash setupTeleConnect_Sales_Agents.sh
 ## 🧪 Testing
 
 ### Test the A2A Server
+
+Use this `curl` command to validate the server is responding correctly before connecting it to watsonx Orchestrate. The `"id"` in your request must match the `"id"` in the response — this is a JSON-RPC 2.0 requirement.
 
 ```bash
 curl -X POST http://localhost:5001/agent/chat \
@@ -518,8 +516,8 @@ PORT=5001
   "jsonrpc": "2.0",
   "result": {
     "role": "assistant",
-    "parts": [{"kind": "text", "text": "..."}],
-    "kind": "message"
+    "kind": "message",
+    "parts": [{ "kind": "text", "text": "..." }]
   },
   "id": 1
 }
@@ -551,7 +549,14 @@ if 'parts' in msg and isinstance(msg['parts'], list) and len(msg['parts']) > 0:
 - Missing required fields in response
 - Unhandled exceptions in business logic
 
-**Solution**: Check server logs for detailed error messages and stack traces
+**Solution**: Check server logs for detailed error messages and stack traces. The server should always return a valid JSON-RPC 2.0 error object rather than letting exceptions bubble up:
+```json
+{
+  "jsonrpc": "2.0",
+  "error": { "code": -32603, "message": "Internal error: <details>" },
+  "id": 1
+}
+```
 
 ### Debugging Tips
 
@@ -570,18 +575,49 @@ if 'parts' in msg and isinstance(msg['parts'], list) and len(msg['parts']) > 0:
 
 **Critical Points**:
 - Incoming messages: `params.message.parts[0].text`
-- Outgoing messages: Fields directly in `result` (not nested)
-- Response must include: `role`, `parts`, and `kind` fields
-- Use `parts` array with `kind: "text"` for message content
-- Always return valid JSON-RPC 2.0 format with matching `id`
+- Outgoing messages: Fields directly in `result` (not nested under `message`)
+- `result` must include: `role`, `kind`, and `parts` fields
+- `parts` entries use `kind: "text"` — not `kind: "message"` (that belongs on `result`)
+- Always return valid JSON-RPC 2.0 format with a matching `id`
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! To contribute:
+
+1. Fork the repository and create a branch from `main`
+2. Make your changes and test them locally (see the [Testing](#-testing) section)
+3. Ensure the A2A server responds correctly before submitting
+4. Open a Pull Request with a clear description of what changed and why
+
+**Keep in mind**: contributors will need access to IBM watsonx Orchestrate and a Google API key to run the full system end-to-end. The A2A server and CPQ tools can be tested independently with `curl`.
 
 ## 📄 License
 
-This project is provided as-is for demonstration purposes.
+This project is licensed under the [MIT License](LICENSE).
+
+```
+MIT License
+
+Copyright (c) 2025 Vmaidana1
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## 🙏 Acknowledgments
 
@@ -592,9 +628,9 @@ This project is provided as-is for demonstration purposes.
 ## 📞 Support
 
 For questions or issues:
-- Check watsonx Orchestrate documentation
+- Check the [watsonx Orchestrate documentation](https://developer.watson-orchestrate.ibm.com/)
 - Open an issue in this repository
 
 ---
 
-**Made with IBM Bob** 🤖
+*Built on IBM watsonx Orchestrate* 🤖
