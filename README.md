@@ -50,26 +50,35 @@ This repository showcases a multi-agent AI system for **TeleConnect**, a telecom
 
 ```
 google-agents-in-watsonx-orchestrate/   ← repo root after cloning
-├── Google_Agents/
+├── google_agents/
 │   └── deal_desk_agent/          # Google ADK CPQ agent
 │       ├── A2A_server.py          # A2A protocol server
 │       ├── agent.py               # Google ADK agent definition
 │       ├── tools/                 # CPQ calculation tool
+│       │   └── calculate_enterprise_quote.py
 │       ├── requirements.txt
+│       ├── TROUBLESHOOTING.md     # Debugging guide
 │       └── .env.example           # Environment template
 │
-├── TeleConnect_Sales_Agents/
-│   ├── Agents/                    # Agent YAML definitions
-│   │   ├── telecorp_enterprise_sales_agent.yaml
-│   │   ├── network_serviceability_agent.yaml
-│   │   └── deal_desk_cpq_agent_google_adk.yaml
-│   ├── Tools/                     # Python tools
-│   │   ├── get_salesforce_b2b_enterprise_account_lookup.py
-│   │   ├── get_connectbase_network_serviceability_lookup.py
-│   │   └── calculate_enterprise_quote.py
-│   ├── Knowledge/                 # Sales battlecards & docs
-│   ├── Data/                      # Mock data (Salesforce, ConnectBase)
-│   └── setupTeleConnect_Sales_Agents.sh
+├── watsonx_orchestrate_agents/
+│   ├── setupTeleConnect_Sales_Agents.sh  # Deployment script
+│   └── TeleConnect_Sales_Agents/
+│       ├── Agents/                # Agent YAML definitions
+│       │   ├── telecorp_enterprise_sales_agent.yaml
+│       │   ├── network_serviceability_agent.yaml
+│       │   └── deal_desk_cpq_agent_google_adk.yaml
+│       ├── Tools/                 # Python tools (simulated data)
+│       │   ├── __init__.py
+│       │   ├── get_salesforce_b2b_enterprise_account_lookup.py
+│       │   └── get_connectbase_network_serviceability_lookup.py
+│       ├── Knowledge/             # Sales battlecards & docs
+│       │   ├── 5G_FWA_Sales_Battlecard.pdf
+│       │   ├── Fiber_DIA_Sales_Battlecard.pdf
+│       │   ├── Fiber_vs_5G_FWA_Comparison_Slide.pdf
+│       │   └── sales_knowledge_base.yaml
+│       └── Data/                  # Reference data (Salesforce, ConnectBase)
+│           ├── salesforceb2bdata.json
+│           └── connectbasedata.json
 │
 ├── .gitignore
 └── README.md
@@ -85,9 +94,11 @@ google-agents-in-watsonx-orchestrate/   ← repo root after cloning
 - **Cloudflare Tunnel**: Local development networking
 
 ### Data Sources
-- **Salesforce**: B2B enterprise accounts, customer profiles (mock data)
-- **ConnectBase**: Network infrastructure and serviceability (mock data)
+- **Salesforce**: B2B enterprise accounts, customer profiles (simulated with hardcoded data)
+- **ConnectBase**: Network infrastructure and serviceability (simulated with hardcoded data)
 - **Knowledge Bases**: Sales battlecards (RAG)
+
+**Note**: The Salesforce and ConnectBase tools use embedded hardcoded data for demonstration purposes. They do not make actual API calls to external services, making them suitable for testing and demo environments without requiring API credentials or network access.
 
 ## 📋 Prerequisites
 
@@ -110,7 +121,7 @@ cd google-agents-in-watsonx-orchestrate
 ### 2. Set Up Google ADK Agent
 
 ```bash
-cd Google_Agents/deal_desk_agent
+cd google_agents/deal_desk_agent
 
 # Create virtual environment
 python -m venv venv
@@ -127,7 +138,7 @@ cp .env.example .env
 ### 3. Start the A2A Server
 
 ```bash
-# From Google_Agents/deal_desk_agent/
+# From google_agents/deal_desk_agent/
 python A2A_server.py
 ```
 
@@ -169,13 +180,13 @@ Deploy your A2A server to a cloud platform for a stable, production-ready URL:
 | AWS Lambda + API Gateway | Serverless function approach |
 | Azure Container Apps | Container hosting |
 
-> **Tip**: See [`Google_Agents/deal_desk_agent/`](Google_Agents/deal_desk_agent/) for the server code you'll be deploying. A `Dockerfile` is a natural next step if you're targeting any of these platforms.
+> **Tip**: See [`google_agents/deal_desk_agent/`](google_agents/deal_desk_agent/) for the server code you'll be deploying. A `Dockerfile` is a natural next step if you're targeting any of these platforms.
 
 ### 5. Configure External Agent URL
 
 **IMPORTANT**: Do this BEFORE running the setup script!
 
-Edit `TeleConnect_Sales_Agents/Agents/deal_desk_cpq_agent_google_adk.yaml` and replace the placeholder with your actual tunnel URL:
+Edit `watsonx_orchestrate_agents/TeleConnect_Sales_Agents/Agents/deal_desk_cpq_agent_google_adk.yaml` and replace the placeholder with your actual tunnel URL:
 
 ```yaml
 # Change this:
@@ -191,7 +202,7 @@ api_url: https://abc123.ngrok.io/agent/chat
 ### 6. Deploy to watsonx Orchestrate
 
 ```bash
-cd TeleConnect_Sales_Agents
+cd watsonx_orchestrate_agents
 
 # Activate your watsonx Orchestrate environment
 orchestrate env activate YOUR_ENVIRONMENT_NAME --apikey YOUR_API_KEY
@@ -201,19 +212,57 @@ bash setupTeleConnect_Sales_Agents.sh
 ```
 
 The script will:
-1. Import the three agent YAML definitions
-2. Register the Python tools with watsonx Orchestrate
-3. Upload the knowledge base documents (sales battlecards)
+1. Import the two Python tools (Salesforce lookup and ConnectBase serviceability) with watsonx Orchestrate
+2. Upload the knowledge base documents (sales battlecards)
+3. Import the three agent YAML definitions
 4. Wire the Deal Desk CPQ agent to the tunnel URL you set in Step 5
+
+**Note**: The Python tools use simulated data and do not require external API credentials.
 
 **Note**: The setup script will import the Deal Desk CPQ agent with the URL you configured in step 5.
 
 ## 📖 Documentation
 
-- **[Setup Script](TeleConnect_Sales_Agents/setupTeleConnect_Sales_Agents.sh)**: Automates the full deployment of agents, tools, and knowledge bases to watsonx Orchestrate. Run it from the `TeleConnect_Sales_Agents/` directory after activating your environment.
-- **[Agent YAML definitions](TeleConnect_Sales_Agents/Agents/)**: Declarative definitions for all three agents — edit these to customize agent behavior, descriptions, or collaborator URLs.
-- **[A2A Server](Google_Agents/deal_desk_agent/A2A_server.py)**: Flask server implementing the A2A 0.3.0 protocol. The entry point for the Google ADK integration.
-- **[CPQ Tools](TeleConnect_Sales_Agents/Tools/)**: Python implementations for Salesforce lookup, ConnectBase serviceability check, and quote calculation.
+- **[Setup Script](watsonx_orchestrate_agents/setupTeleConnect_Sales_Agents.sh)**: Automates the full deployment of agents, tools, and knowledge bases to watsonx Orchestrate. Run it from the `watsonx_orchestrate_agents/` directory after activating your environment.
+- **[Agent YAML definitions](watsonx_orchestrate_agents/TeleConnect_Sales_Agents/Agents/)**: Declarative definitions for all three agents — edit these to customize agent behavior, descriptions, or collaborator URLs.
+- **[A2A Server](google_agents/deal_desk_agent/A2A_server.py)**: Flask server implementing the A2A 0.3.0 protocol. The entry point for the Google ADK integration.
+- **[Python Tools](watsonx_orchestrate_agents/TeleConnect_Sales_Agents/Tools/)**: Simulated implementations for Salesforce B2B account lookup and ConnectBase network serviceability checks. These tools use hardcoded data and do not require external API access.
+
+## 🛠️ Tool Architecture
+
+### Python Tools (watsonx Orchestrate Native)
+
+The system includes two Python tools that run natively in watsonx Orchestrate:
+
+1. **`get_salesforce_b2b_enterprise_account_lookup.py`**
+   - Simulates Salesforce B2B API responses
+   - Returns enterprise account details including MSA discounts, account tiers, and contract information
+   - Contains hardcoded data for 5 sample enterprise accounts
+   - No external API calls or credentials required
+
+2. **`get_connectbase_network_serviceability_lookup.py`**
+   - Simulates ConnectBase network infrastructure API responses
+   - Returns network serviceability data including fiber availability, distance to fiber, and pricing
+   - Contains hardcoded data for 5 sample locations
+   - No external API calls or credentials required
+
+**Why Simulated Data?**
+- **Demo-Ready**: Works immediately without API credentials or network access
+- **Consistent Results**: Predictable responses for testing and demonstrations
+- **No Dependencies**: Eliminates external service dependencies and potential API failures
+- **Easy Customization**: Modify the hardcoded data arrays to add new test scenarios
+
+**Data Location**: The original JSON data files are preserved in [`watsonx_orchestrate_agents/TeleConnect_Sales_Agents/Data/`](watsonx_orchestrate_agents/TeleConnect_Sales_Agents/Data/) for reference.
+
+### External Agent (Google ADK via A2A)
+
+The **Deal Desk & CPQ Agent** runs as an external Google ADK agent and performs actual quote calculations using business logic:
+
+- **`calculate_enterprise_quote.py`** (in google_agents/deal_desk_agent/tools/)
+  - Applies MSA discounts from customer data
+  - Calculates term-length kickers (additional discounts for longer contracts)
+  - Computes Total Contract Value (TCV)
+  - Applies promotional rules (e.g., NRC waiver for 36-month terms)
 
 ## 🔑 Key Learnings
 

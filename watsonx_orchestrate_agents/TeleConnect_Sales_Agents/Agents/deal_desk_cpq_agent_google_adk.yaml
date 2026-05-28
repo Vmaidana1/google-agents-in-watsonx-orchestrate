@@ -1,0 +1,131 @@
+spec_version: v1
+kind: external
+name: deal_desk_cpq_agent_google
+display_name: Deal Desk & CPQ Agent (Google ADK)
+title: Deal Desk & CPQ Agent
+description: |
+  Strict financial deal desk analyst responsible for deterministic pricing calculations. This agent
+  performs Configure, Price, Quote (CPQ) calculations using approved business rules, discount
+  structures, and contract terms. Requires four inputs: base MRC, base NRC, MSA discount
+  percentage, and contract term in months. Powered by Google ADK and integrated via A2A protocol.
+
+# External agent configuration for A2A 0.3.0 integration
+provider: external_chat/A2A/0.3.0
+api_url: https://YOUR-TUNNEL-URL-HERE.trycloudflare.com/agent/chat
+
+# For production, replace auth_scheme with appropriate token-based authentication
+auth_scheme: NONE
+
+# A2A protocol chat parameters — do not change these without testing against watsonx Orchestrate
+chat_params:
+  stream: false
+  sendHistory: true
+  pushNotifications: false
+
+# Instructions for the parent (orchestrator) agent.
+# These tell the TeleCorp Enterprise Sales Agent when and how to delegate to this agent,
+# what to send, and what to expect back.
+instructions: |
+  This is an external agent powered by Google ADK that performs deterministic CPQ
+  (Configure, Price, Quote) calculations using approved business rules.
+
+  ═══════════════════════════════════════
+  WHEN TO DELEGATE TO THIS AGENT
+  ═══════════════════════════════════════
+
+  Delegate here whenever you need to:
+  - Calculate final pricing with MSA discounts applied
+  - Apply term-length discount kickers (24- or 36-month)
+  - Determine whether NRC (installation fee) is waived or reduced
+  - Compute Total Contract Value (TCV) for the deal
+  - Obtain annualized savings figures for the customer
+
+  ═══════════════════════════════════════
+  REQUIRED INPUTS
+  ═══════════════════════════════════════
+
+  You MUST provide all four values in your delegation message.
+  Do NOT delegate if any value is missing — ask the user first.
+
+  | Input            | Where it comes from              | Example               |
+  |------------------|----------------------------------|-----------------------|
+  | base_mrc         | Network Serviceability Agent     | $1,000                |
+  | base_nrc         | Network Serviceability Agent     | $500                  |
+  | msa_discount     | Salesforce account lookup        | 20%                   |
+  | term_months      | Customer requirement / default   | 36 months             |
+
+  Default term is 36 months if the customer has not specified one.
+
+  ═══════════════════════════════════════
+  DELEGATION MESSAGE FORMAT
+  ═══════════════════════════════════════
+
+  Always phrase the delegation in natural language using this exact structure,
+  so the agent can reliably parse the four required values:
+
+    "Calculate quote with base MRC $<amount>, base NRC $<amount>,
+     MSA discount <percent>%, <term>-month term"
+
+  Example:
+    "Calculate quote with base MRC $1000, base NRC $500, MSA discount 20%, 36-month term"
+
+  Example (24-month):
+    "Calculate quote with base MRC $350, base NRC $0, MSA discount 15%, 24-month term"
+
+  ═══════════════════════════════════════
+  WHAT THIS AGENT RETURNS
+  ═══════════════════════════════════════
+
+  The agent responds with a formatted markdown report containing:
+
+  | Field                    | Description                                          |
+  |--------------------------|------------------------------------------------------|
+  | Monthly Recurring Charge | Final MRC after all discounts                        |
+  | Non-Recurring Charge     | Final NRC after any waivers or reductions            |
+  | Total Contract Value     | (Final MRC × term months) + Final NRC                |
+  | Annualized Savings       | Yearly savings vs. full list-price 12-month baseline |
+  | Applied Promotions       | List of promotion labels that were triggered         |
+
+  ═══════════════════════════════════════
+  BUSINESS RULES APPLIED AUTOMATICALLY
+  ═══════════════════════════════════════
+
+  The agent applies these rules in order. Only one term tier applies per quote.
+
+  1. MSA Discount
+     Applied to base MRC for all customers with an active MSA.
+
+  2. 24-Month Term Kicker (if term >= 24 months)
+     - Extra 3% off MRC (stacked on top of MSA discount)
+     - NRC reduced by 50%
+     - Promotion label: "24-Month Term Kicker: Extra 3% Off MRC"
+     - Promotion label: "24-Month Term Promotion: 50% Off NRC"
+
+  3. 36-Month Term Kicker (if term >= 36 months — overrides 24-month tier)
+     - Extra 5% off MRC (stacked on top of MSA discount)
+     - NRC fully waived ($0)
+     - Promotion label: "36-Month Term Kicker: Extra 5% Off MRC"
+     - Promotion label: "36-Month Term Promotion: NRC Waived"
+
+  ═══════════════════════════════════════
+  CRITICAL RULES FOR THE PARENT AGENT
+  ═══════════════════════════════════════
+
+  - NEVER modify or recalculate the numbers returned by this agent.
+    They are deterministic, audit-ready, and authoritative.
+  - NEVER delegate with missing inputs — the agent will ask for them,
+    which creates unnecessary round-trips. Gather all four values first.
+  - Same inputs always produce the same outputs. If a number looks wrong,
+    check the inputs, not the agent.
+
+tags:
+  - cpq
+  - pricing
+  - financial
+  - google-adk
+  - a2a
+  - deal-desk
+
+config:
+  hidden: false
+  enable_cot: false

@@ -39,7 +39,7 @@ AGENTS_IMPORTED=()
 echo "Step 1: Importing Python Tools..."
 
 echo "  - Importing get_salesforce_b2b_enterprise_account_lookup..."
-if orchestrate tools import -k python -f Tools/get_salesforce_b2b_enterprise_account_lookup.py; then
+if orchestrate tools import -k python -f TeleConnect_Sales_Agents/Tools/get_salesforce_b2b_enterprise_account_lookup.py; then
     TOOLS_IMPORTED+=("get_salesforce_b2b_enterprise_account_lookup")
     echo "    ✓ Success"
 else
@@ -47,19 +47,11 @@ else
 fi
 
 echo "  - Importing get_connectbase_network_serviceability_lookup..."
-if orchestrate tools import -k python -f Tools/get_connectbase_network_serviceability_lookup.py; then
+if orchestrate tools import -k python -f TeleConnect_Sales_Agents/Tools/get_connectbase_network_serviceability_lookup.py; then
     TOOLS_IMPORTED+=("get_connectbase_network_serviceability_lookup")
     echo "    ✓ Success"
 else
     error_exit "Failed to import get_connectbase_network_serviceability_lookup tool"
-fi
-
-echo "  - Importing calculate_enterprise_quote..."
-if orchestrate tools import -k python -f Tools/calculate_enterprise_quote.py; then
-    TOOLS_IMPORTED+=("calculate_enterprise_quote")
-    echo "    ✓ Success"
-else
-    error_exit "Failed to import calculate_enterprise_quote tool"
 fi
 
 echo "✓ All tools imported successfully"
@@ -67,7 +59,7 @@ echo ""
 
 # Step 2: Import Knowledge Base
 echo "Step 2: Importing Knowledge Base..."
-if orchestrate knowledge-bases import -f Knowledge/sales_knowledge_base.yaml; then
+if orchestrate knowledge-bases import -f TeleConnect_Sales_Agents/Knowledge/sales_knowledge_base.yaml; then
     KB_IMPORTED=true
     echo "✓ Knowledge base imported successfully"
 else
@@ -79,7 +71,7 @@ echo ""
 echo "Step 3: Importing Agents..."
 
 echo "  - Importing Network Serviceability Agent..."
-if orchestrate agents import -f Agents/network_serviceability_agent.yaml; then
+if orchestrate agents import -f TeleConnect_Sales_Agents/Agents/network_serviceability_agent.yaml; then
     AGENTS_IMPORTED+=("network_serviceability_agent")
     echo "    ✓ Success"
 else
@@ -87,7 +79,7 @@ else
 fi
 
 echo "  - Importing Deal Desk & CPQ Agent..."
-if orchestrate agents import -f Agents/deal_desk_cpq_agent_google_adk.yaml; then
+if orchestrate agents import -f TeleConnect_Sales_Agents/Agents/deal_desk_cpq_agent_google_adk.yaml; then
     AGENTS_IMPORTED+=("deal_desk_cpq_agent")
     echo "    ✓ Success"
 else
@@ -95,7 +87,7 @@ else
 fi
 
 echo "  - Importing TeleCorp Enterprise Sales Agent (main orchestrator)..."
-if orchestrate agents import -f Agents/telecorp_enterprise_sales_agent.yaml; then
+if orchestrate agents import -f TeleConnect_Sales_Agents/Agents/telecorp_enterprise_sales_agent.yaml; then
     AGENTS_IMPORTED+=("TeleConnect_enterprise_sales_agent")
     echo "    ✓ Success"
 else
