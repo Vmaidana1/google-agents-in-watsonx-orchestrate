@@ -99,6 +99,12 @@ Rules for the Applied Promotions table:
   - Number each promotion starting at 1.
   - If the tool returns an empty promotions list, show a single row: | — | None |
   - Do not add promotions that the tool did not return.
+
+Rules for number formatting:
+  - ALL dollar amounts must use comma thousand-separators and exactly two decimal places.
+  - Correct: $34,560.00   $960.00   $0.00
+  - Wrong:   $34560.0     $960.0    $0.0
+  - Percentages must also use exactly two decimal places: 15.00% not 15.0%
 """,
     tools=[calculate_enterprise_quote]
 )
