@@ -3,9 +3,15 @@ TeleConnect_Customer_Care_Agents/
 
 # Personal Documentation
 Google_Agents/deal_desk_agent/TROUBLESHOOTING.md
+PUSH_CHECKLIST.md
 TeleConnect_Sales_Agents/Demo Script/Multi-Agent_Telecom_Sales_Demo_Script.docx
 INTEGRATION_GUIDE.md
 DEPLOYMENT_STEPS.md
+
+# Old/deprecated code
+google_agents/deal_desk_agent/old/
+Google_Agents/deal_desk_agent/old/
+*/old/
 
 # Environment Variables and Secrets
 .env
@@ -124,3 +130,4 @@ docs/_build/
 site/
 
 # Made with Bob
+.bob/

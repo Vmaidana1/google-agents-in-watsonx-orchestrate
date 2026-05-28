@@ -1,39 +1,26 @@
 """
-A2A Server for Deal Desk CPQ Agent
+A2A Server for Deal Desk CPQ Agent - PROPERLY INTEGRATED WITH GOOGLE ADK
 Implements the A2A 0.3.0 protocol over JSON-RPC 2.0 for integration with watsonx Orchestrate.
 
-Architecture note:
-    This server calls the CPQ tool directly rather than routing through the Google ADK
-    agent runner. The ADK Runner API (BaseNode.run()) does not accept a message argument
-    in the version used here — see TROUBLESHOOTING.md Issue 2 for details.
-    The CPQ tool (calculate_enterprise_quote) is deterministic and requires no LLM
-    reasoning, so direct invocation is functionally equivalent for this use case.
-
-A2A 0.3.0 response format (critical — do not restructure without testing):
-    {
-        "jsonrpc": "2.0",
-        "result": {
-            "role": "assistant",
-            "parts": [{"kind": "text", "text": "..."}],
-            "kind": "message"
-        },
-        "id": <request id>
-    }
-    Message fields MUST be directly in 'result', NOT nested under a 'message' key.
-    See TROUBLESHOOTING.md Issue 7 for the full trial-and-error history.
+This version uses the correct Google ADK Runner API to invoke the agent.
 """
 
 import logging
 import os
-import re
 import sys
+import uuid
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from google.adk.runners import Runner
+from google.adk.sessions.in_memory_session_service import InMemorySessionService
+from google.genai import types as genai_types
 
-# Ensure the project root is on the path so 'tools' is importable
+# Ensure the project root is on the path
 sys.path.append(os.path.dirname(__file__))
-from tools.calculate_enterprise_quote import calculate_enterprise_quote
+
+# Import the Google ADK agent
+from agent import root_agent
 
 # ── Environment & logging ──────────────────────────────────────────────────────
 
@@ -48,18 +35,26 @@ log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# ── Initialize Google ADK Runner ───────────────────────────────────────────────
+
+# Create a session service (required by Runner)
+session_service = InMemorySessionService()
+
+# Create the runner with our agent
+runner = Runner(
+    app_name="deal_desk_cpq_app",
+    agent=root_agent,
+    session_service=session_service,
+    auto_create_session=True
+)
+
+log.info("Google ADK Runner initialized with agent: %s", root_agent.name)
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def extract_message_content(data: dict) -> str:
     """
     Extract plain text from an incoming A2A / JSON-RPC 2.0 request.
-
-    watsonx Orchestrate wraps the message under params.message.parts[].text.
-    A bare curl test may send it under message.parts[].text or message.content.
-    All three layouts are handled here so local testing and production behave
-    identically.
-
-    Returns an empty string if no text content is found.
     """
     candidates = []
 
@@ -90,49 +85,10 @@ def extract_message_content(data: dict) -> str:
     return ""
 
 
-def parse_cpq_params(text: str) -> tuple[dict, list[str]]:
-    """
-    Extract CPQ parameters from a natural-language message using regex.
-
-    Returns:
-        params  — dict with keys base_mrc, base_nrc, msa_discount, term_months
-                  (only populated keys are present)
-        missing — list of human-readable labels for values that could not be parsed
-    """
-    patterns = {
-        "base_mrc":    r"base[_ ]?mrc[:\s]+\$?(\d+(?:\.\d+)?)",
-        "base_nrc":    r"base[_ ]?nrc[:\s]+\$?(\d+(?:\.\d+)?)",
-        "msa_discount": r"msa[_ ]?discount[:\s]+(\d+(?:\.\d+)?)%?",
-        "term_months": r"(\d+)[- ]?month",
-    }
-    labels = {
-        "base_mrc":    "Base MRC (monthly recurring charge, in dollars)",
-        "base_nrc":    "Base NRC (installation fee, in dollars)",
-        "msa_discount": "MSA discount percentage (e.g. 20 for 20%)",
-        "term_months": "Contract term (in months, e.g. 12, 24, 36)",
-    }
-
-    parsed = {}
-    missing = []
-
-    for key, pattern in patterns.items():
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            parsed[key] = (
-                int(match.group(1)) if key == "term_months"
-                else float(match.group(1))
-            )
-        else:
-            missing.append(labels[key])
-
-    return parsed, missing
-
-
 def build_a2a_response(text: str, request_id) -> dict:
     """
-    Wrap a plain-text reply in the A2A 0.3.0 / JSON-RPC 2.0 envelope that
-    watsonx Orchestrate expects.  Do not change the structure — see module
-    docstring for the format requirements.
+    Wrap a plain-text reply in the A2A 0.3.0 / JSON-RPC 2.0 envelope.
+    Message fields MUST be directly in 'result', NOT nested under a 'message' key.
     """
     return {
         "jsonrpc": "2.0",
@@ -145,40 +101,6 @@ def build_a2a_response(text: str, request_id) -> dict:
     }
 
 
-def format_quote_response(params: dict, result: dict) -> str:
-    """Render the CPQ tool output as a markdown table response."""
-    promotions = result.get("applied_promotions", [])
-    if promotions:
-        promo_rows = "\n".join(
-            f"| {i + 1} | {promo} |" for i, promo in enumerate(promotions)
-        )
-        promo_table = f"| # | Promotion |\n|---|---|\n{promo_rows}"
-    else:
-        promo_table = "| # | Promotion |\n|---|---|\n| — | None |"
-
-    return f"""\
-## Enterprise Quote Calculation Complete
-
-### Input Parameters
-| Parameter    | Value |
-|--------------|-------|
-| Base MRC     | ${params['base_mrc']:,.2f} |
-| Base NRC     | ${params['base_nrc']:,.2f} |
-| MSA Discount | {params['msa_discount']}% |
-| Term Length  | {params['term_months']} months |
-
-### Calculated Quote
-| Metric                   | Amount |
-|--------------------------|--------|
-| Monthly Recurring Charge | ${result['monthly_recurring_charge']:,.2f} |
-| Non-Recurring Charge     | ${result['non_recurring_charge']:,.2f} |
-| Total Contract Value     | ${result['total_contract_value']:,.2f} |
-| Annualized Savings       | ${result['annualized_savings']:,.2f} |
-
-### Applied Promotions
-{promo_table}"""
-
-
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
 @app.route("/agent/chat", methods=["POST"])
@@ -189,11 +111,8 @@ def chat():
     Flow:
         1. Parse and validate the incoming JSON-RPC 2.0 request.
         2. Extract the plain-text message from the A2A parts array.
-        3. Parse CPQ parameters from the message via regex.
-        4. If any parameter is missing, return a conversational reply asking
-           for the specific missing value(s) — do NOT silently fall back to
-           defaults, as that would produce a confident-looking but incorrect quote.
-        5. Run the CPQ calculation and return a formatted markdown response.
+        3. Invoke the Google ADK agent via the Runner.
+        4. Return the agent's response in A2A 0.3.0 format.
     """
     request_id = 1  # default; overridden once data is parsed
 
@@ -219,32 +138,47 @@ def chat():
             reply = "I didn't receive any message content. Please send your quote request with the required parameters."
             return jsonify(build_a2a_response(reply, request_id)), 200
 
-        # ── 2. Parse CPQ parameters ────────────────────────────────────────
-        params, missing = parse_cpq_params(message_content)
-        log.info("Parsed params: %s | Missing: %s", params, missing)
+        # ── 2. Invoke the Google ADK agent via Runner ──────────────────────
+        log.info("Sending message to ADK runner...")
+        
+        # Generate unique IDs for this conversation
+        user_id = "watsonx_user"
+        session_id = str(uuid.uuid4())
+        
+        # Create the message content in the format expected by Runner
+        # Runner.run expects a types.Content object with parts
+        message_parts = [genai_types.Part(text=message_content)]
+        content = genai_types.Content(parts=message_parts, role="user")
+        
+        # Run the agent and collect events
+        events = list(runner.run(
+            user_id=user_id,
+            session_id=session_id,
+            new_message=content
+        ))
+        
+        log.info("Agent returned %d events", len(events))
+        
+        # Extract the final response from events
+        response_text = ""
+        for event in events:
+            log.debug("Event type: %s", type(event).__name__)
+            # Look for the agent's response in the events
+            if hasattr(event, 'content') and event.content:
+                if hasattr(event.content, 'parts'):
+                    for part in event.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            response_text += part.text
+        
+        if not response_text:
+            # Fallback: try to extract from last event
+            if events:
+                last_event = events[-1]
+                response_text = str(last_event)
+        
+        log.info("Agent final response: %r", response_text[:200] + "..." if len(response_text) > 200 else response_text)
 
-        # ── 3. Ask for missing values rather than silently defaulting ──────
-        if missing:
-            items = "\n".join(f"  - {m}" for m in missing)
-            reply = (
-                f"To complete the quote I still need the following value(s):\n\n"
-                f"{items}\n\n"
-                f"Could you provide those?"
-            )
-            log.info("Returning clarification request for: %s", missing)
-            return jsonify(build_a2a_response(reply, request_id)), 200
-
-        # ── 4. Run CPQ calculation ─────────────────────────────────────────
-        result = calculate_enterprise_quote(
-            base_mrc=params["base_mrc"],
-            base_nrc=params["base_nrc"],
-            msa_discount_percent=params["msa_discount"],
-            term_months=params["term_months"],
-        )
-        log.info("CPQ result: %s", result)
-
-        # ── 5. Format and return ───────────────────────────────────────────
-        response_text = format_quote_response(params, result)
+        # ── 3. Format and return ───────────────────────────────────────────
         response = build_a2a_response(response_text, request_id)
         log.debug("Sending response: %s", response)
         return jsonify(response), 200
@@ -261,7 +195,7 @@ def chat():
 @app.route("/health", methods=["GET"])
 def health():
     """Health check — useful for verifying the tunnel is live before configuring watsonx."""
-    return jsonify({"status": "healthy", "agent": "Deal Desk CPQ Agent"}), 200
+    return jsonify({"status": "healthy", "agent": f"Deal Desk CPQ Agent (Google ADK - {root_agent.name})"}), 200
 
 
 # ── Entrypoint ─────────────────────────────────────────────────────────────────
@@ -271,11 +205,15 @@ if __name__ == "__main__":
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
 
     log.info("=" * 60)
-    log.info("Starting Deal Desk A2A Server")
-    log.info("Port    : %d", port)
-    log.info("Debug   : %s", debug)
+    log.info("Starting Deal Desk A2A Server (WITH GOOGLE ADK AGENT)")
+    log.info("Agent  : %s", root_agent.name)
+    log.info("Model  : %s", root_agent.model)
+    log.info("Port   : %d", port)
+    log.info("Debug  : %s", debug)
     log.info("Endpoint: http://localhost:%d/agent/chat", port)
     log.info("Health  : http://localhost:%d/health", port)
     log.info("=" * 60)
 
     app.run(host="0.0.0.0", port=port, debug=debug)
+
+# Made with Bob
